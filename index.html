@@ -1,0 +1,441 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Calculadora de Métodos Numéricos</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body class="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 p-6">
+
+    <div class="max-w-7xl mx-auto">
+        <div class="bg-white rounded-2xl shadow-xl p-8 mb-6">
+            <div class="flex items-center gap-3 mb-6">
+                <svg class="w-8 h-8 text-indigo-600" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="16" height="20" x="4" y="2" rx="2"/><line x1="8" x2="16" y1="6" y2="6"/><line x1="16" x2="16" y1="14" y2="18"/><path d="M16 10h.01"/><path d="M12 10h.01"/><path d="M8 10h.01"/><path d="M12 14h.01"/><path d="M8 14h.01"/><path d="M12 18h.01"/><path d="M8 18h.01"/></svg>
+                <h1 class="text-3xl font-bold text-gray-800">Calculadora de Métodos Numéricos</h1>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Problemas Predefinidos</label>
+                    <select id="problemSelect" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent">
+                        <option value="1">Problema 1: x³ - e^(0.8x) = 20</option>
+                        <option value="2">Problema 2: 3sin(0.5x) - 0.5x + 2 = 0</option>
+                        <option value="3">Problema 3: x³ - x²e^(-0.5x) - 3x = -1</option>
+                        <option value="4">Problema 4: cos²x - 0.5xe^(0.3x) + 5 = 0</option>
+                    </select>
+                </div>
+
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Método Numérico</label>
+                    <select id="methodSelect" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent">
+                        <option value="bisection">Bisección</option>
+                        <option value="newton">Newton-Raphson</option>
+                        <option value="secant">Secante</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="mb-6">
+                <label class="block text-sm font-medium text-gray-700 mb-2">Ecuación (usar x como variable)</label>
+                <input type="text" id="equationInput" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent" placeholder="Ejemplo: x^3 - 2*x - 5">
+                <p class="mt-2 text-sm text-gray-500">Funciones disponibles: exp(), sin(), cos(), tan(), log(), sqrt(), abs()</p>
+            </div>
+
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+                <div>
+                    <label id="labelA" class="block text-sm font-medium text-gray-700 mb-2">Límite inferior (a)</label>
+                    <input type="number" step="0.1" id="inputA" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent">
+                </div>
+
+                <div id="containerB">
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Límite superior (b)</label>
+                    <input type="number" step="0.1" id="inputB" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent">
+                </div>
+
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Tolerancia</label>
+                    <input type="number" step="0.00001" id="inputTolerance" value="0.0001" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent">
+                </div>
+
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Iteraciones máx.</label>
+                    <input type="number" id="inputMaxIter" value="100" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent">
+                </div>
+            </div>
+
+            <button id="solveBtn" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-3 px-6 rounded-lg transition-colors duration-200 flex items-center justify-center gap-2">
+                <svg class="w-5 h-5" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"/><path d="M21 3v5h-5"/><path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"/><path d="M8 16H3v5"/></svg>
+                Calcular Raíz
+            </button>
+        </div>
+
+        <div id="resultsContainer" class="hidden">
+            <div class="bg-white rounded-2xl shadow-xl p-8 mb-6">
+                <div class="flex justify-between items-center mb-6">
+                    <h2 class="text-2xl font-bold text-gray-800">Resultados</h2>
+                    <button id="downloadBtn" class="flex items-center gap-2 bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg transition-colors">
+                        <svg class="w-4 h-4" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" x2="12" y1="15" y2="3"/></svg>
+                        Descargar CSV
+                    </button>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+                    <div class="bg-indigo-50 p-4 rounded-lg">
+                        <p class="text-sm text-gray-600">Raíz encontrada</p>
+                        <p id="resRoot" class="text-2xl font-bold text-indigo-600">-</p>
+                    </div>
+                    <div class="bg-green-50 p-4 rounded-lg">
+                        <p class="text-sm text-gray-600">Iteraciones</p>
+                        <p id="resIter" class="text-2xl font-bold text-green-600">-</p>
+                    </div>
+                    <div class="bg-blue-50 p-4 rounded-lg">
+                        <p class="text-sm text-gray-600">Estado</p>
+                        <p id="resState" class="text-2xl font-bold text-blue-600">-</p>
+                    </div>
+                </div>
+
+                <div class="mb-6">
+                    <h3 class="text-xl font-bold text-gray-800 mb-4">Gráfica de la Función</h3>
+                    <div class="relative h-96 w-full">
+                        <canvas id="chartCanvas"></canvas>
+                    </div>
+                </div>
+
+                <div class="overflow-x-auto">
+                    <h3 class="text-xl font-bold text-gray-800 mb-4">Tabla de Iteraciones</h3>
+                    <table class="w-full border-collapse" id="iterationsTable">
+                        <thead>
+                            <tr class="bg-indigo-100" id="tableHeaderRow">
+                                </tr>
+                        </thead>
+                        <tbody id="tableBody">
+                            </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <div class="bg-white rounded-2xl shadow-xl p-8">
+            <h2 class="text-2xl font-bold text-gray-800 mb-4">Información de los Métodos</h2>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div class="border-l-4 border-indigo-500 pl-4">
+                    <h3 class="font-bold text-lg mb-2">Bisección</h3>
+                    <p class="text-gray-600 text-sm">Divide el intervalo a la mitad en cada iteración. Requiere que f(a) y f(b) tengan signos opuestos.</p>
+                </div>
+                <div class="border-l-4 border-green-500 pl-4">
+                    <h3 class="font-bold text-lg mb-2">Newton-Raphson</h3>
+                    <p class="text-gray-600 text-sm">Usa la tangente a la curva. Convergencia rápida (cuadrática) pero requiere buena aproximación inicial.</p>
+                </div>
+                <div class="border-l-4 border-blue-500 pl-4">
+                    <h3 class="font-bold text-lg mb-2">Secante</h3>
+                    <p class="text-gray-600 text-sm">Similar a Newton pero aproxima la derivada numéricamente. No requiere calcular la derivada explícitamente.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // --- Constantes y Configuración Inicial ---
+        const problems = {
+            '1': { eq: 'x^3 - exp(0.8*x) - 20', a: '0', b: '8', desc: 'x³ - e^(0.8x) = 20' },
+            '2': { eq: '3*sin(0.5*x) - 0.5*x - 2', a: '0', b: '10', desc: '3sin(0.5x) - 0.5x + 2 = 0' },
+            '3': { eq: 'x^3 - x^2*exp(-0.5*x) - 3*x + 1', a: '-2', b: '5', desc: 'x³ - x²e^(-0.5x) - 3x = -1' },
+            '4': { eq: 'cos(x)^2 - 0.5*x*exp(0.3*x) - 5', a: '-5', b: '0', desc: 'cos²x - 0.5xe^(0.3x) + 5 = 0' }
+        };
+
+        // Variable global para almacenar el gráfico y los resultados
+        let chartInstance = null;
+        let currentResults = null;
+
+        // --- Funciones Matemáticas ---
+        const evaluateFunction = (expr, x) => {
+            try {
+                const sanitized = expr
+                    .replace(/\^/g, '**')
+                    .replace(/exp/g, 'Math.exp')
+                    .replace(/sin/g, 'Math.sin')
+                    .replace(/cos/g, 'Math.cos')
+                    .replace(/tan/g, 'Math.tan')
+                    .replace(/log/g, 'Math.log')
+                    .replace(/sqrt/g, 'Math.sqrt')
+                    .replace(/abs/g, 'Math.abs');
+                // Reemplazamos 'x' asegurando que no rompa palabras como 'exp'
+                // Una forma segura es usar una regex que busque la x como palabra completa o rodeada de operadores
+                // Para este ejemplo simple, usaremos el replace con cuidado o pasaremos el valor directo
+                // Nota: El replace simple /x/g puede romper 'exp', así que usamos una regex negativa
+                // O mejor aún, definimos las funciones matemáticas en el scope local y usamos Function constructor
+                
+                // Método más robusto para evaluar:
+                const func = new Function('x', `with(Math) { return ${sanitized} }`);
+                return func(x);
+            } catch (e) {
+                console.error(e);
+                throw new Error('Error al evaluar la función');
+            }
+        };
+
+        const derivative = (expr, x) => {
+            const h = 0.0001;
+            return (evaluateFunction(expr, x + h) - evaluateFunction(expr, x - h)) / (2 * h);
+        };
+
+        // --- Algoritmos Numéricos ---
+        const bisectionMethod = (expr, a, b, tol, maxIt) => {
+            const iterations = [];
+            let aVal = parseFloat(a);
+            let bVal = parseFloat(b);
+            let iter = 0;
+
+            const fa = evaluateFunction(expr, aVal);
+            const fb = evaluateFunction(expr, bVal);
+
+            if (fa * fb > 0) throw new Error('f(a) y f(b) deben tener signos opuestos');
+
+            while (iter < maxIt) {
+                const c = (aVal + bVal) / 2;
+                const fc = evaluateFunction(expr, c);
+                const error = Math.abs(bVal - aVal);
+
+                iterations.push({ iteration: iter + 1, a: aVal.toFixed(6), b: bVal.toFixed(6), c: c.toFixed(6), fc: fc.toFixed(6), error: error.toFixed(6) });
+
+                if (error < tol || Math.abs(fc) < tol) return { root: c, iterations, converged: true };
+
+                if (evaluateFunction(expr, aVal) * fc < 0) bVal = c;
+                else aVal = c;
+                iter++;
+            }
+            return { root: (aVal + bVal) / 2, iterations, converged: false };
+        };
+
+        const newtonRaphson = (expr, x0, tol, maxIt) => {
+            const iterations = [];
+            let x = parseFloat(x0);
+            let iter = 0;
+
+            while (iter < maxIt) {
+                const fx = evaluateFunction(expr, x);
+                const fpx = derivative(expr, x);
+
+                if (Math.abs(fpx) < 1e-10) throw new Error('Derivada muy pequeña, el método no converge');
+
+                const xNew = x - fx / fpx;
+                const error = Math.abs(xNew - x);
+
+                iterations.push({ iteration: iter + 1, x: x.toFixed(6), fx: fx.toFixed(6), fpx: fpx.toFixed(6), xNew: xNew.toFixed(6), error: error.toFixed(6) });
+
+                if (error < tol || Math.abs(fx) < tol) return { root: xNew, iterations, converged: true };
+
+                x = xNew;
+                iter++;
+            }
+            return { root: x, iterations, converged: false };
+        };
+
+        const secantMethod = (expr, x0, x1, tol, maxIt) => {
+            const iterations = [];
+            let xPrev = parseFloat(x0);
+            let x = parseFloat(x1);
+            let iter = 0;
+
+            while (iter < maxIt) {
+                const fPrev = evaluateFunction(expr, xPrev);
+                const fx = evaluateFunction(expr, x);
+
+                if (Math.abs(fx - fPrev) < 1e-10) throw new Error('Diferencia de función muy pequeña');
+
+                const xNew = x - fx * (x - xPrev) / (fx - fPrev);
+                const error = Math.abs(xNew - x);
+
+                iterations.push({ iteration: iter + 1, xPrev: xPrev.toFixed(6), x: x.toFixed(6), fx: fx.toFixed(6), xNew: xNew.toFixed(6), error: error.toFixed(6) });
+
+                if (error < tol || Math.abs(fx) < tol) return { root: xNew, iterations, converged: true };
+
+                xPrev = x;
+                x = xNew;
+                iter++;
+            }
+            return { root: x, iterations, converged: false };
+        };
+
+        // --- Funciones de Interfaz ---
+        function loadProblem(id) {
+            const p = problems[id];
+            document.getElementById('equationInput').value = p.eq;
+            document.getElementById('inputA').value = p.a;
+            document.getElementById('inputB').value = p.b;
+        }
+
+        function updateUIForMethod(method) {
+            const containerB = document.getElementById('containerB');
+            const labelA = document.getElementById('labelA');
+            
+            if (method === 'newton') {
+                containerB.classList.add('hidden');
+                labelA.innerText = 'Valor inicial (x₀)';
+            } else {
+                containerB.classList.remove('hidden');
+                labelA.innerText = 'Límite inferior (a)';
+            }
+        }
+
+        function renderTable(iterations) {
+            const thead = document.getElementById('tableHeaderRow');
+            const tbody = document.getElementById('tableBody');
+            
+            // Limpiar tabla
+            thead.innerHTML = '';
+            tbody.innerHTML = '';
+
+            if (iterations.length === 0) return;
+
+            // Headers
+            const headers = Object.keys(iterations[0]);
+            headers.forEach(h => {
+                const th = document.createElement('th');
+                th.className = "border border-gray-300 px-4 py-2 text-left font-semibold";
+                th.innerText = h;
+                thead.appendChild(th);
+            });
+
+            // Filas
+            iterations.forEach((row, idx) => {
+                const tr = document.createElement('tr');
+                tr.className = idx % 2 === 0 ? 'bg-gray-50' : 'bg-white';
+                Object.values(row).forEach(val => {
+                    const td = document.createElement('td');
+                    td.className = "border border-gray-300 px-4 py-2";
+                    td.innerText = val;
+                    tr.appendChild(td);
+                });
+                tbody.appendChild(tr);
+            });
+        }
+
+        function renderChart(expr, a, b, root) {
+            const ctx = document.getElementById('chartCanvas').getContext('2d');
+            const points = [];
+            const rangeA = parseFloat(a) - 1; // Margen visual
+            const rangeB = parseFloat(b) + 1;
+            const step = (rangeB - rangeA) / 100;
+
+            for (let x = rangeA; x <= rangeB; x += step) {
+                try {
+                    const y = evaluateFunction(expr, x);
+                    // Evitar valores infinitos o NaN para el gráfico
+                    if (!isNaN(y) && Math.abs(y) < 1000) {
+                        points.push({ x: x, y: y });
+                    }
+                } catch(e) {}
+            }
+
+            if (chartInstance) chartInstance.destroy();
+
+            chartInstance = new Chart(ctx, {
+                type: 'scatter',
+                data: {
+                    datasets: [
+                        {
+                            label: 'f(x)',
+                            data: points,
+                            showLine: true,
+                            borderColor: '#4f46e5',
+                            borderWidth: 2,
+                            pointRadius: 0,
+                            fill: false,
+                            tension: 0.1
+                        },
+                        {
+                            label: 'Raíz',
+                            data: [{x: root, y: 0}],
+                            backgroundColor: 'red',
+                            pointRadius: 6,
+                            pointHoverRadius: 8
+                        },
+                        {
+                            label: 'y = 0',
+                            data: [{x: rangeA, y: 0}, {x: rangeB, y: 0}],
+                            showLine: true,
+                            borderColor: '#10b981',
+                            borderDash: [5, 5],
+                            pointRadius: 0
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        x: { type: 'linear', position: 'bottom', title: {display: true, text: 'x'} },
+                        y: { title: {display: true, text: 'f(x)'} }
+                    }
+                }
+            });
+        }
+
+        function downloadCSV() {
+            if (!currentResults) return;
+            let csv = 'data:text/csv;charset=utf-8,';
+            const headers = Object.keys(currentResults.iterations[0]).join(',');
+            csv += headers + '\n';
+            currentResults.iterations.forEach(row => {
+                csv += Object.values(row).join(',') + '\n';
+            });
+            const encodedUri = encodeURI(csv);
+            const link = document.createElement('a');
+            link.setAttribute('href', encodedUri);
+            link.setAttribute('download', 'resultados.csv');
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+
+        // --- Event Listeners y Ejecución Principal ---
+
+        document.getElementById('solveBtn').addEventListener('click', () => {
+            const equation = document.getElementById('equationInput').value;
+            const method = document.getElementById('methodSelect').value;
+            const a = document.getElementById('inputA').value;
+            const b = document.getElementById('inputB').value; // Puede estar vacío en Newton
+            const tol = parseFloat(document.getElementById('inputTolerance').value);
+            const maxIter = parseInt(document.getElementById('inputMaxIter').value);
+
+            try {
+                let result;
+                if (method === 'bisection') result = bisectionMethod(equation, a, b, tol, maxIter);
+                else if (method === 'newton') result = newtonRaphson(equation, a, tol, maxIter);
+                else if (method === 'secant') result = secantMethod(equation, a, b, tol, maxIter);
+
+                currentResults = result;
+
+                // Mostrar resultados
+                document.getElementById('resultsContainer').classList.remove('hidden');
+                document.getElementById('resRoot').innerText = result.root.toFixed(8);
+                document.getElementById('resIter').innerText = result.iterations.length;
+                document.getElementById('resState').innerText = result.converged ? 'Convergió ✓' : 'No convergió ✗';
+                
+                // Renderizar tabla y gráfico
+                renderTable(result.iterations);
+                
+                // Determinar rango de gráfico: si es Newton, crear rango alrededor de la raíz
+                const graphA = method === 'newton' ? (result.root - 5) : a;
+                const graphB = method === 'newton' ? (result.root + 5) : b;
+                renderChart(equation, graphA, graphB, result.root);
+
+            } catch (error) {
+                alert(error.message);
+            }
+        });
+
+        // Eventos de Cambio
+        document.getElementById('problemSelect').addEventListener('change', (e) => loadProblem(e.target.value));
+        document.getElementById('methodSelect').addEventListener('change', (e) => updateUIForMethod(e.target.value));
+        document.getElementById('downloadBtn').addEventListener('click', downloadCSV);
+
+        // Inicialización
+        loadProblem('1');
+
+    </script>
+</body>
+</html>
